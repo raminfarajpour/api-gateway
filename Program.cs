@@ -17,10 +17,21 @@ namespace api_gateway
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+            var builder = WebHost.CreateDefaultBuilder(args);
+
+            builder.ConfigureServices(s => s.AddSingleton(builder))
+                    .ConfigureAppConfiguration((hostingContext, config) =>
+                    {
+                        config
+                            .SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
+                            .AddJsonFile("appsettings.json", true, true)
+                            .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true, true)
+                            .AddJsonFile($"ocelote.json", true, true)
+                            .AddOcelot("/Configs", hostingContext.HostingEnvironment,true,true)
+                            .AddEnvironmentVariables();
+                    })
+                    .UseStartup<Startup>();
+            var host = builder.Build();
+            return host;
     }
 }
